@@ -63,4 +63,32 @@ describe Admin::CategoriesController do
     assert_raise(ActiveRecord::RecordNotFound) { Category.find(test_id) }
   end
   
+  describe "test editing of categories with nil id" do
+    it 'passing nil id' do
+      category = Factory(:category, :id => 12, :name => "Category X", :keywords => "Keyword X", :permalink => 'Permalink P', :description => 'Description D')
+      get :edit, :id => nil
+      Category.should_receive(:find).with(:all).and_return([])
+      Category.should_receive(:new).and_return(category)
+      category.should_receive(:save!).and_return(true)
+      post :edit, :category => {:name => 'Category X', :keywords => 'Keyword X', :permalink => 'Permalink P', :description => 'Description D'}
+      expect(flash[:notice]).to eq("Category was successfully saved.")
+      assert_response :redirect
+      assert_redirected_to :action => 'new'
+    end
+  end
+  
+  describe "test editing of categories" do
+    before(:each) do
+      get :edit, :id => Factory(:category).id
+    end
+    
+    it 'passing some valid id' do
+      post :edit, :category => {:name => 'Category X', :keywords => 'Keyword X', :permalink => 'Permalink P', :description => 'Description D'}
+      assert_response :redirect
+      assert_redirected_to :action => 'new'
+      expect(response).to redirect_to('/admin/categories/new')
+      expect(flash[:notice]).to eq("Category was successfully saved.")
+    end
+  end
+  
 end
